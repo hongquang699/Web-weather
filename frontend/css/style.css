@@ -1,0 +1,191 @@
+/* ========================================================
+   MODULE: style.css - Bố Cục Cơ Sở, Biến Màu & Giao Diện Động Apple Weather
+   ======================================================== */
+
+:root {
+  --primary-color: #38bdf8;
+  --primary-hover: #0284c7;
+  --accent-color: #facc15;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --success-color: #10b981;
+
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  
+  --text-main: #ffffff;
+  --text-sub: rgba(255, 255, 255, 0.82);
+  --text-dim: rgba(255, 255, 255, 0.58);
+
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --radius-xl: 26px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+  --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Xóa bỏ hoàn toàn mọi gạch chân dưới chữ */
+a, a:hover, a:focus, a:active, a:visited {
+  text-decoration: none !important;
+  color: inherit;
+}
+
+button, input {
+  text-decoration: none !important;
+  font-family: inherit;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-main);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background-color: #070e1c;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Background Layers */
+.weather-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  background-size: cover;
+  background-position: center;
+}
+
+#weatherCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ========================================================
+   AUTHENTIC APPLE WEATHER PALETTES (iOS 17/18 Spec)
+   ======================================================== */
+
+/* 1. Trời nắng / Ban ngày rực rỡ */
+body.theme-sunny #weatherBg {
+  background: linear-gradient(180deg, 
+    #1754aa 0%, 
+    #2a7fe0 35%, 
+    #5aa6f5 65%, 
+    #8bc3f8 85%, 
+    #bfe0fc 100%
+  );
+}
+
+/* 2. Trời nhiều mây / U ám */
+body.theme-cloudy #weatherBg {
+  background: linear-gradient(180deg, 
+    #2b3543 0%, 
+    #3e4b5d 40%, 
+    #59677b 75%, 
+    #7a889b 100%
+  );
+}
+
+/* 3. Trời mưa / Mưa rào mát rượi */
+body.theme-rain #weatherBg {
+  background: linear-gradient(180deg, 
+    #131a24 0%, 
+    #1f2a3a 35%, 
+    #2d3b4e 70%, 
+    #3f4f64 100%
+  );
+}
+
+/* 4. Dông bão / Sấm chớp dữ dội */
+body.theme-thunder #weatherBg {
+  background: linear-gradient(180deg, 
+    #090c12 0%, 
+    #121620 40%, 
+    #1a1f2e 75%, 
+    #241f33 100%
+  );
+}
+
+/* 5. Tuyết rơi / Mùa đông lạnh giá */
+body.theme-snow #weatherBg {
+  background: linear-gradient(180deg, 
+    #2a3b4c 0%, 
+    #41556b 40%, 
+    #617891 75%, 
+    #8ca3ba 100%
+  );
+}
+
+/* 6. Sương mù / Mờ sương */
+body.theme-fog #weatherBg {
+  background: linear-gradient(180deg, 
+    #242d38 0%, 
+    #3b4654 45%, 
+    #5a6775 80%, 
+    #7f8c9b 100%
+  );
+}
+
+/* 7. Đêm quang đãng / Dải ngân hà đầy sao */
+body.theme-night #weatherBg {
+  background: linear-gradient(180deg, 
+    #020611 0%, 
+    #070f24 35%, 
+    #0e1b3d 70%, 
+    #162854 100%
+  );
+}
+
+/* Forced Theme Modes (Dark / Light Override) */
+body.theme-forced-dark {
+  --glass-bg: rgba(15, 23, 42, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+}
+
+body.theme-forced-dark #weatherBg {
+  background: linear-gradient(180deg, #060911 0%, #0d1424 100%) !important;
+}
+
+body.theme-forced-light {
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --text-main: #0f172a;
+  --text-sub: #475569;
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-forced-light #weatherBg {
+  background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 100%) !important;
+}
+
+/* App Container */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+  position: relative;
+  z-index: 10;
+}
+
+.hidden {
+  display: none !important;
+}

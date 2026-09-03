@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dự Báo Thời Tiết Chi Tiết 48h & 14 Ngày - MeteoLive</title>
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Modular CSS -->
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+
+  <style>
+    .forecast-header-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 24px 28px;
+      backdrop-filter: blur(24px);
+      box-shadow: var(--glass-shadow);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .city-select {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--glass-border);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .city-select option {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .day-detail-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(16px);
+      display: grid;
+      grid-template-columns: 160px 1fr 140px 120px;
+      align-items: center;
+      gap: 16px;
+      transition: var(--transition-smooth);
+    }
+
+    .day-detail-card:hover {
+      background: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .day-name-block {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .day-date-sub {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-weight: normal;
+    }
+
+    .day-weather-desc {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .day-weather-desc i {
+      font-size: 1.6rem;
+    }
+
+    .temp-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .temp-visual-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .temp-visual-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #38bdf8 0%, #facc15 50%, #f87171 100%);
+    }
+
+    .extra-meta {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      .day-detail-card {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .extra-meta {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body class="theme-sunny">
+  <div class="weather-background" id="weatherBg"></div>
+  <canvas id="weatherCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <a href="../index.html" class="tab-btn active"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_home">Quay lại Trang Chủ</span></a>
+      <div style="display: flex; gap: 8px;">
+        <a href="../pages/map.html" class="tab-btn"><i class="fa-solid fa-satellite-dish"></i> <span data-i18n="nav_radar">Bản Đồ Mưa</span></a>
+        <div class="unit-toggle-group">
+          <button class="unit-btn active" id="langVi">VI</button>
+          <button class="unit-btn" id="langEn">EN</button>
+        </div>
+        <div class="unit-toggle-group">
+          <button class="unit-btn active" id="unitC">°C</button>
+          <button class="unit-btn" id="unitF">°F</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Card with City Selector -->
+    <div class="forecast-header-card">
+      <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 6px;">Trung Tâm Dự Báo Thời Tiết Chuyên Sâu</h1>
+        <p style="color: var(--text-sub); font-size: 0.92rem;" id="forecastCityTitle">Dự báo chi tiết 48 giờ & 14 ngày tới tại Hà Nội</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <label for="citySelectDropdown" style="font-weight: 600; font-size: 0.9rem;">Chọn Tỉnh Thành:</label>
+        <select id="citySelectDropdown" class="city-select">
+          <optgroup label="Miền Bắc">
+            <option value="21.0285,105.8542" selected>Hà Nội</option>
+            <option value="20.8449,106.6881">Hải Phòng</option>
+            <option value="20.9505,107.0734">Quảng Ninh (Hạ Long)</option>
+            <option value="22.3364,103.8438">Lào Cai (Sa Pa)</option>
+            <option value="20.8172,105.3376">Hòa Bình</option>
+            <option value="21.1861,106.0763">Bắc Ninh</option>
+            <option value="20.2506,105.9745">Ninh Bình</option>
+          </optgroup>
+          <optgroup label="Miền Trung">
+            <option value="18.6734,105.6813">Nghệ An (TP. Vinh)</option>
+            <option value="19.8067,105.7852">Thanh Hóa</option>
+            <option value="18.3430,105.9058">Hà Tĩnh</option>
+            <option value="17.4690,106.6225">Quảng Bình</option>
+            <option value="16.4637,107.5909">Thừa Thiên Huế</option>
+            <option value="16.0544,108.2022">Đà Nẵng</option>
+            <option value="15.8801,108.3380">Quảng Nam (Hội An)</option>
+            <option value="12.2388,109.1967">Khánh Hòa (Nha Trang)</option>
+            <option value="11.9404,108.4583">Lâm Đồng (Đà Lạt)</option>
+            <option value="12.6675,108.0383">Đắk Lắk (Buôn Ma Thuột)</option>
+          </optgroup>
+          <optgroup label="Miền Nam">
+            <option value="10.8231,106.6297">TP. Hồ Chí Minh</option>
+            <option value="10.3460,107.0843">Bà Rịa - Vũng Tàu</option>
+            <option value="10.0452,105.7469">Cần Thơ</option>
+            <option value="10.2289,103.9572">Kiên Giang (Phú Quốc)</option>
+            <option value="10.9805,106.6519">Bình Dương</option>
+            <option value="9.1769,105.1524">Cà Mau</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingBox" style="text-align: center; padding: 40px;" class="hidden">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+      <p style="margin-top: 12px; color: var(--text-sub);">Đang tải dữ liệu khí tượng chuyên sâu...</p>
+    </div>
+
+    <!-- Content Container -->
+    <div id="forecastContent">
+      <!-- 1. Biểu Đồ Xu Hướng 48 Giờ -->
+      <div class="chart-box">
+        <div class="section-header-row">
+          <h3 class="section-title"><i class="fa-solid fa-chart-area"></i> Biểu Đồ Biến Thiên Nhiệt Độ & Xác Suất Mưa (Chart.js)</h3>
+          <div class="toggle-pill-group">
+            <button class="toggle-pill-btn active" id="chart24Btn">24 Giờ</button>
+            <button class="toggle-pill-btn" id="chart48Btn">48 Giờ</button>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="weatherTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 2. Dự Báo Theo Giờ (Hourly Slider) -->
+      <div class="hourly-container">
+        <div class="section-header-row">
+          <h3 class="section-title"><i class="fa-regular fa-clock"></i> Chi Tiết Dự Báo Theo Giờ</h3>
+          <div class="toggle-pill-group">
+            <button class="toggle-pill-btn active" id="hourly24Btn">24 Giờ tới</button>
+            <button class="toggle-pill-btn" id="hourly48Btn">48 Giờ tới</button>
+          </div>
+        </div>
+        <div class="hourly-slider" id="hourlySlider"></div>
+      </div>
+
+      <!-- 3. Dự Báo Dài Hạn 7 - 14 Ngày -->
+      <div class="daily-container">
+        <div class="section-header-row">
+          <h3 class="section-title"><i class="fa-regular fa-calendar-days"></i> Dự Báo Dài Hạn 14 Ngày</h3>
+          <div class="toggle-pill-group">
+            <button class="toggle-pill-btn" id="daily7Btn">7 Ngày</button>
+            <button class="toggle-pill-btn active" id="daily14Btn">Đầy đủ 14 Ngày</button>
+          </div>
+        </div>
+        <div id="dailyCardsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="../js/location.js"></script>
+  <script src="../js/weather.js"></script>
+  <script src="../js/chart.js"></script>
+
+  <script>
+    let currentUnit = 'C';
+    let hourlyHours = 24;
+    let dailyDays = 14;
+    let currentWeatherData = null;
+
+    async function loadForecastData(lat, lon, cityName) {
+      const loading = document.getElementById('loadingBox');
+      const content = document.getElementById('forecastContent');
+      const title = document.getElementById('forecastCityTitle');
+      
+      try {
+        loading.classList.remove('hidden');
+        content.style.opacity = '0.35';
+        if (title) title.textContent = `Dự báo chi tiết 48 giờ & 14 ngày tới tại ${cityName}`;
+
+        const data = await fetchWeatherData(lat, lon, cityName);
+        currentWeatherData = data;
+        renderAllForecasts();
+      } catch (e) {
+        alert('Lỗi tải dữ liệu thời tiết: ' + e.message);
+      } finally {
+        loading.classList.add('hidden');
+        content.style.opacity = '1';
+      }
+    }
+
+    function renderAllForecasts() {
+      if (!currentWeatherData) return;
+      const hourly = currentWeatherData.hourly;
+      const daily = currentWeatherData.daily;
+
+      // 1. Biểu đồ Chart.js
+      renderWeatherTrendChart(hourly, hourlyHours, currentUnit);
+
+      // 2. Hourly Slider
+      renderHourly(hourly);
+
+      // 3. Daily Detailed Cards
+      renderDaily(daily);
+    }
+
+    function renderHourly(hourly) {
+      const slider = document.getElementById('hourlySlider');
+      if (!slider || !hourly || !hourly.time) return;
+      slider.innerHTML = '';
+
+      const now = new Date();
+      const currentHourStr = now.toISOString().slice(0, 13);
+      let startIndex = hourly.time.findIndex(t => t.startsWith(currentHourStr));
+      if (startIndex === -1) startIndex = 0;
+
+      for (let i = startIndex; i < startIndex + hourlyHours && i < hourly.time.length; i++) {
+        const timeStr = hourly.time[i];
+        const hour = timeStr.split('T')[1].slice(0, 5);
+        const temp = hourly.temperature_2m[i];
+        const code = hourly.weather_code[i];
+        const pop = hourly.precipitation_probability ? hourly.precipitation_probability[i] : 0;
+        const hourNum = parseInt(hour.split(':')[0]);
+        const isDay = (hourNum >= 6 && hourNum < 18) ? 1 : 0;
+        const info = getWeatherInfo(code, isDay);
+
+        const card = document.createElement('div');
+        card.className = `hourly-card ${i === startIndex ? 'active-hour' : ''}`;
+        card.innerHTML = `
+          <span class="hourly-time">${i === startIndex ? 'Hiện tại' : hour}</span>
+          <i class="${info.icon} hourly-icon" style="color: ${info.iconColor}"></i>
+          <span class="hourly-temp">${formatTemp(temp, currentUnit)}°</span>
+          ${pop > 0 ? `<span class="hourly-pop"><i class="fa-solid fa-droplet"></i> ${pop}%</span>` : ''}
+        `;
+        slider.appendChild(card);
+      }
+    }
+
+    function renderDaily(daily) {
+      const container = document.getElementById('dailyCardsContainer');
+      if (!container || !daily || !daily.time) return;
+      container.innerHTML = '';
+
+      for (let i = 0; i < dailyDays && i < daily.time.length; i++) {
+        const date = new Date(daily.time[i]);
+        const dayTitle = i === 0 ? 'Hôm nay' : (i === 1 ? 'Ngày mai' : date.toLocaleDateString('vi-VN', { weekday: 'long' }));
+        const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        const code = daily.weather_code[i];
+        const info = getWeatherInfo(code, 1);
+        const maxT = daily.temperature_2m_max[i];
+        const minT = daily.temperature_2m_min[i];
+        const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : 0;
+        const rainSum = daily.precipitation_sum ? daily.precipitation_sum[i] : 0;
+        const wind = daily.wind_speed_10m_max ? Math.round(daily.wind_speed_10m_max[i]) : 0;
+        const uv = daily.uv_index_max ? daily.uv_index_max[i] : 0;
+
+        const card = document.createElement('div');
+        card.className = 'day-detail-card';
+        card.innerHTML = `
+          <div>
+            <div class="day-name-block">${dayTitle}</div>
+            <div class="day-date-sub">${dateStr}</div>
+          </div>
+          <div class="day-weather-desc">
+            <i class="${info.icon}" style="color: ${info.iconColor}"></i>
+            <div>
+              <div style="font-weight: 700; font-size: 0.95rem;">${info.desc}</div>
+              <div style="font-size: 0.78rem; color: #7dd3fc;"><i class="fa-solid fa-droplet"></i> Xác suất mưa: ${pop}% (${rainSum} mm)</div>
+            </div>
+          </div>
+          <div class="temp-bar-container">
+            <span style="color: #60a5fa;">${formatTemp(minT, currentUnit)}°</span>
+            <div class="temp-visual-track">
+              <div class="temp-visual-fill" style="width: 100%;"></div>
+            </div>
+            <span style="color: #f87171;">${formatTemp(maxT, currentUnit)}°</span>
+          </div>
+          <div class="extra-meta">
+            <span><i class="fa-solid fa-wind"></i> Gió: ${wind} km/h</span>
+            <span><i class="fa-solid fa-sun"></i> UV Max: ${uv}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    // City Selector Event
+    document.getElementById('citySelectDropdown').addEventListener('change', (e) => {
+      const parts = e.target.value.split(',');
+      const selectedText = e.target.options[e.target.selectedIndex].text;
+      loadForecastData(parseFloat(parts[0]), parseFloat(parts[1]), selectedText);
+    });
+
+    // Hourly toggle
+    document.getElementById('hourly24Btn').addEventListener('click', () => {
+      hourlyHours = 24;
+      document.getElementById('hourly24Btn').classList.add('active');
+      document.getElementById('hourly48Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+    document.getElementById('hourly48Btn').addEventListener('click', () => {
+      hourlyHours = 48;
+      document.getElementById('hourly48Btn').classList.add('active');
+      document.getElementById('hourly24Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+
+    // Chart toggle
+    document.getElementById('chart24Btn').addEventListener('click', () => {
+      hourlyHours = 24;
+      document.getElementById('chart24Btn').classList.add('active');
+      document.getElementById('chart48Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+    document.getElementById('chart48Btn').addEventListener('click', () => {
+      hourlyHours = 48;
+      document.getElementById('chart48Btn').classList.add('active');
+      document.getElementById('chart24Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+
+    // Daily toggle
+    document.getElementById('daily7Btn').addEventListener('click', () => {
+      dailyDays = 7;
+      document.getElementById('daily7Btn').classList.add('active');
+      document.getElementById('daily14Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+    document.getElementById('daily14Btn').addEventListener('click', () => {
+      dailyDays = 14;
+      document.getElementById('daily14Btn').classList.add('active');
+      document.getElementById('daily7Btn').classList.remove('active');
+      renderAllForecasts();
+    });
+
+    // Unit toggle
+    document.getElementById('unitC').addEventListener('click', () => {
+      currentUnit = 'C';
+      document.getElementById('unitC').classList.add('active');
+      document.getElementById('unitF').classList.remove('active');
+      renderAllForecasts();
+    });
+    document.getElementById('unitF').addEventListener('click', () => {
+      currentUnit = 'F';
+      document.getElementById('unitF').classList.add('active');
+      document.getElementById('unitC').classList.remove('active');
+      renderAllForecasts();
+    });
+
+    // Lắng nghe đổi ngôn ngữ
+    window.addEventListener('languageChanged', () => {
+      renderAllForecasts();
+    });
+
+    // Initial Load: Hà Nội
+    loadForecastData(21.0285, 105.8542, 'Hà Nội');
+  </script>
+  <!-- Multi-language & Anti-Tampering Shield -->
+  <script src="../js/i18n.js"></script>
+  <script src="../js/security.js"></script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dự Báo Thời Tiết Thời Gian Thực - MeteoLive</title>
+
+  <!-- Security Headers & Content Security Policy (CSP) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.open-meteo.com https://geocoding-api.open-meteo.com https://api.bigdatacloud.net https://api.rainviewer.com https://tilecache.rainviewer.com https://*.tile.openstreetmap.org; img-src 'self' data: https: blob:; worker-src blob:;" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+  <!-- Primary SEO Meta Tags -->
+  <meta name="description" content="Xem dự báo thời tiết và nhiệt độ cập nhật theo thời gian thực tại 63 tỉnh thành Việt Nam và toàn cầu. Dự báo 24-48 giờ, 7-14 ngày kèm bản đồ radar mây mưa trực tiếp." />
+  <meta name="keywords" content="thời tiết, dự báo thời tiết, radar mưa, nhiệt độ thời gian thực, thời tiết hà nội, thời tiết tphcm" />
+  <meta name="author" content="MeteoLive Team" />
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <!-- Modular CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body class="theme-sunny">
+  <!-- Dynamic Apple Weather Background & Particle FX -->
+  <div class="weather-background" id="weatherBg"></div>
+  <canvas id="weatherCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <i class="fa-solid fa-cloud-sun-rain logo-icon"></i>
+        <div>
+          <h1 class="brand-title">MeteoLive</h1>
+          <p class="brand-subtitle">Dự Báo Thời Tiết 63 Tỉnh Thành Thời Gian Thực</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="themeModeBtn" title="Đổi giao diện Dark / Light / Auto">
+          <i class="fa-solid fa-circle-half-stroke" id="themeModeIcon"></i>
+        </button>
+        <button class="icon-btn" id="favToggleBtn" title="Lưu địa điểm yêu thích">
+          <i class="fa-regular fa-star" id="favStarIcon"></i>
+        </button>
+        <button class="icon-btn" id="geoBtn" title="Lấy vị trí GPS của bạn">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </button>
+        <div class="unit-toggle-group">
+          <button class="unit-btn active" id="langVi">VI</button>
+          <button class="unit-btn" id="langEn">EN</button>
+        </div>
+        <div class="unit-toggle-group">
+          <button class="unit-btn active" id="unitC">°C</button>
+          <button class="unit-btn" id="unitF">°F</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Bar for Pages -->
+    <nav style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto;">
+      <a href="index.html" class="tab-btn active"><i class="fa-solid fa-house"></i> Trang Chủ</a>
+      <a href="pages/map.html" class="tab-btn"><i class="fa-solid fa-map"></i> Bản Đồ Radar Mưa</a>
+      <a href="pages/forecast.html" class="tab-btn"><i class="fa-solid fa-chart-line"></i> Dự Báo Chi Tiết</a>
+      <a href="pages/settings.html" class="tab-btn"><i class="fa-solid fa-gear"></i> Cài Đặt</a>
+    </nav>
+
+    <!-- Severe Weather & Rain Alert Banners -->
+    <div id="severeAlertBanner" class="alert-banner hidden">
+      <i class="fa-solid fa-triangle-exclamation alert-icon"></i>
+      <div class="alert-content">
+        <div class="alert-title" id="alertTitle">⚠️ CẢNH BÁO THỜI TIẾT NGUY HIỂM</div>
+        <div class="alert-desc" id="alertDesc">Khu vực có khả năng xuất hiện thời tiết cực đoan. Vui lòng chú ý an toàn.</div>
+      </div>
+      <button class="close-alert-btn" id="dismissAlertBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="rainNoticeBanner" class="alert-banner rain-notice hidden">
+      <i class="fa-solid fa-cloud-showers-heavy alert-icon"></i>
+      <div class="alert-content">
+        <div class="alert-title" style="color: #bae6fd;">🌧️ THÔNG BÁO SẮP CÓ MƯA</div>
+        <div class="alert-desc" id="rainNoticeText">Xác suất mưa cao trong 1-2 giờ tới. Hãy mang theo ô hoặc áo mưa!</div>
+      </div>
+    </div>
+
+    <!-- Search Bar & Dropdown -->
+    <div class="search-wrapper">
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass search-icon" style="color: var(--text-dim); margin-right: 8px;"></i>
+        <input type="text" id="cityInput" class="search-input" placeholder="Gõ tên tỉnh thành (Ví dụ: Hà Nội, Đà Nẵng, TP.HCM, Sa Pa, Đà Lạt...)" autocomplete="off" />
+        <button id="clearSearchBtn" class="clear-search-btn" title="Xóa"><i class="fa-solid fa-circle-xmark"></i></button>
+      </div>
+      <div id="suggestionsList" class="suggestions-dropdown"></div>
+    </div>
+
+    <!-- Quick Location Chips & Regional Tabs -->
+    <div class="quick-locations-section">
+      <div class="location-tabs">
+        <button class="tab-btn active" data-category="vietnam">🇻🇳 63 Tỉnh Thành VN</button>
+        <button class="tab-btn" data-category="popular">⭐ Phổ biến</button>
+        <button class="tab-btn" data-category="asia">🌏 Châu Á</button>
+        <button class="tab-btn" data-category="world">🌍 Thế giới</button>
+        <button class="tab-btn" data-category="favorites">❤️ Yêu thích (<span id="favCount">0</span>)</button>
+      </div>
+      <div class="sub-filters" id="vnRegionFilters">
+        <button class="sub-filter-btn active" data-sub="all">Toàn bộ 63 tỉnh</button>
+        <button class="sub-filter-btn" data-sub="bac">Miền Bắc (25)</button>
+        <button class="sub-filter-btn" data-sub="trung">Miền Trung (19)</button>
+        <button class="sub-filter-btn" data-sub="nam">Miền Nam (19)</button>
+      </div>
+      <div class="quick-cities" id="quickCitiesContainer"></div>
+    </div>
+
+    <!-- Loading / Error Indicators -->
+    <div id="loadingIndicator" class="loading-state hidden" style="text-align: center; padding: 20px;">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+      <p style="margin-top: 8px; color: var(--text-sub);">Đang cập nhật thời tiết thời gian thực...</p>
+    </div>
+
+    <div id="errorMessage" class="error-banner hidden" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+      <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; margin-right: 8px;"></i>
+      <span id="errorText">Có lỗi xảy ra</span>
+    </div>
+
+    <!-- Weather Main Content -->
+    <main id="weatherContent">
+      <!-- 1. Hero Card: Thời tiết hiện tại -->
+      <div class="current-card">
+        <div class="card-top">
+          <div class="location-info">
+            <h2 id="cityName">--</h2>
+            <div class="local-time" id="localTime">Đang tải...</div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="map-badge" id="openMapLink">
+              <i class="fa-solid fa-map-location-dot"></i> Xem Vị Trí Bản Đồ
+            </a>
+          </div>
+          <button class="icon-btn" id="cardFavBtn" title="Lưu vị trí này">
+            <i class="fa-regular fa-bookmark" id="cardFavIcon"></i>
+          </button>
+        </div>
+
+        <div class="weather-main-row">
+          <div class="weather-icon-large" id="mainWeatherIcon">
+            <i class="fa-solid fa-cloud-sun" style="color: #facc15"></i>
+          </div>
+          <div>
+            <div class="temp-huge"><span id="currentTemp">--</span><span class="temp-unit">°</span></div>
+            <div class="weather-state-desc" id="weatherDescription">--</div>
+            <div class="feels-like-text">Cảm giác thực tế như <span id="feelsLikeTemp">--</span>°</div>
+            <div class="temp-range-pills">
+              <span class="range-pill"><i class="fa-solid fa-arrow-up" style="color: #f87171;"></i> Cao: <span id="maxTemp">--</span>°</span>
+              <span class="range-pill"><i class="fa-solid fa-arrow-down" style="color: #60a5fa;"></i> Thấp: <span id="minTemp">--</span>°</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lưới 8 chỉ số chi tiết -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <i class="fa-solid fa-droplet" style="color: #38bdf8;"></i>
+            <div>
+              <div class="metric-title">Độ ẩm</div>
+              <div class="metric-value"><span id="humidityVal">--</span>%</div>
+              <div class="metric-sub">Độ ẩm không khí</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-wind" style="color: #a78bfa;"></i>
+            <div>
+              <div class="metric-title">Tốc độ gió</div>
+              <div class="metric-value"><span id="windSpeedVal">--</span> km/h</div>
+              <div class="metric-sub" id="windDirVal">Hướng gió</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-sun" style="color: #facc15;"></i>
+            <div>
+              <div class="metric-title">Chỉ số UV</div>
+              <div class="metric-value" id="uvVal">--</div>
+              <div class="metric-sub" id="uvDesc">Tia cực tím</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-gauge-high" style="color: #34d399;"></i>
+            <div>
+              <div class="metric-title">Áp suất</div>
+              <div class="metric-value"><span id="pressureVal">--</span> hPa</div>
+              <div class="metric-sub">Khí quyển</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-cloud-rain" style="color: #60a5fa;"></i>
+            <div>
+              <div class="metric-title">Lượng mưa</div>
+              <div class="metric-value"><span id="rainVal">--</span> mm</div>
+              <div class="metric-sub">24h qua</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-eye" style="color: #2dd4bf;"></i>
+            <div>
+              <div class="metric-title">Tầm nhìn</div>
+              <div class="metric-value"><span id="visibilityVal">--</span> km</div>
+              <div class="metric-sub" id="visibilityDesc">Độ quang đãng</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-moon" style="color: #fef08a;"></i>
+            <div>
+              <div class="metric-title">Pha Mặt Trăng</div>
+              <div class="metric-value" id="moonPhaseName" style="font-size: 1.05rem;">--</div>
+              <div class="metric-sub" id="moonIllumVal">Thủy triều</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <i class="fa-solid fa-sun-plant-wilt" style="color: #fb923c;"></i>
+            <div>
+              <div class="metric-title">Mặt trời</div>
+              <div class="metric-value" style="font-size: 1rem;">🌅 <span id="sunriseVal">--</span></div>
+              <div class="metric-sub">🌇 Hoàng hôn: <span id="sunsetVal">--</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Cards: Chuyển hướng sang 2 trang chuyên biệt -->
+      <div class="home-navigation-hub">
+        <a href="pages/forecast.html" class="hub-action-card">
+          <div class="hub-icon-circle" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <div>
+            <div class="hub-title">Dự Báo Chi Tiết 48h & 14 Ngày</div>
+            <div class="hub-subtitle">Biểu đồ nhiệt độ, lượng mưa và chi tiết từng ngày</div>
+          </div>
+        </a>
+
+        <a href="pages/map.html" class="hub-action-card">
+          <div class="hub-icon-circle" style="background: rgba(250, 204, 21, 0.2); color: #facc15;">
+            <i class="fa-solid fa-satellite-dish"></i>
+          </div>
+          <div>
+            <div class="hub-title">Bản Đồ Radar Mây Mưa Trực Tiếp</div>
+            <div class="hub-subtitle">Xem vệt mây mưa thời gian thực và chuyển động bão</div>
+          </div>
+        </a>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 MeteoLive - Nền tảng dự báo thời tiết trực quan phong cách Apple Weather</p>
+      <div class="footer-links">
+        <button class="footer-link-btn" id="openFaqBtn">Câu hỏi thường gặp (FAQ)</button>
+        <span>&bull;</span>
+        <button class="footer-link-btn" id="openPrivacyBtn">Chính sách quyền riêng tư</button>
+        <span>&bull;</span>
+        <a href="pages/map.html" class="footer-link-btn" style="text-decoration: none;">Bản đồ toàn màn hình</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal Hỏi Quyền GPS -->
+  <div id="locationPermissionModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📍 Quyền Truy Cập Vị Trí</h3>
+      </div>
+      <div class="modal-body">
+        <p>MeteoLive mong muốn truy cập tọa độ GPS hiện tại của bạn để cập nhật thời tiết và cảnh báo mưa dông chính xác nhất tại nơi bạn đang đứng.</p>
+        <p style="margin-top: 10px; font-size: 0.85rem; color: #94a3b8;">Chúng tôi chỉ lấy tọa độ tức thời và cam kết không lưu giữ lịch sử di chuyển của bạn.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="denyLocationBtn">Để sau</button>
+        <button class="btn-primary" id="allowLocationBtn">Đồng ý cấp quyền</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal FAQ -->
+  <div id="faqModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">❓ Câu Hỏi Thường Gặp (FAQ)</h3>
+        <button class="close-modal-btn" id="closeFaqBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="color: #38bdf8; margin-bottom: 4px;">1. Dữ liệu thời tiết lấy từ đâu?</h4>
+        <p style="margin-bottom: 14px;">Dữ liệu khí tượng được tổng hợp từ Open-Meteo và hệ thống các mô hình dự báo quốc tế (ECMWF, GFS, DWD) với độ phân giải siêu cao.</p>
+        <h4 style="color: #38bdf8; margin-bottom: 4px;">2. Bản đồ radar mây mưa hoạt động thế nào?</h4>
+        <p style="margin-bottom: 14px;">Hình ảnh radar được kết nối từ mạng lưới trạm radar thời tiết toàn cầu RainViewer, cập nhật liên tục 10 phút một lần.</p>
+        <h4 style="color: #38bdf8; margin-bottom: 4px;">3. Tần suất cập nhật thời tiết?</h4>
+        <p style="margin-bottom: 14px;">Hệ thống tự động cập nhật nhiệt độ và mây mưa mỗi 5 phút một lần theo thời gian thực.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Privacy Policy -->
+  <div id="privacyModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🔒 Chính Sách Quyền Riêng Tư</h3>
+        <button class="close-modal-btn" id="closePrivacyBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>MeteoLive tôn trọng tối đa quyền riêng tư của bạn. Tọa độ vị trí GPS chỉ được sử dụng trong phiên làm việc trên trình duyệt để gọi API thời tiết và không bao giờ được chuyển giao cho bên thứ ba.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tamper Toast -->
+  <div id="tamperWarning" class="tamper-toast hidden">
+    <i class="fa-solid fa-shield-halved"></i>
+    <span id="tamperMsg">Mã nguồn đã được bảo vệ bản quyền!</span>
+  </div>
+
+  <!-- Third-party Libraries (Chart.js & Leaflet) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Modular JavaScript Files (In Logical Execution Order) -->
+  <script src="js/location.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/security.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cài Đặt & Tuỳ Chọn - MeteoLive</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body class="theme-sunny">
+  <div class="app-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <a href="../index.html" class="tab-btn active"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_home">Quay lại Trang Chủ</span></a>
+      <div style="display: flex; gap: 8px;">
+        <div class="unit-toggle-group">
+          <button class="unit-btn active" id="langVi">VI</button>
+          <button class="unit-btn" id="langEn">EN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="current-card" style="padding: 28px 32px;">
+      <h2 style="margin-bottom: 20px;" data-i18n="settings_title"><i class="fa-solid fa-gear"></i> Cài Đặt Ứng Dụng</h2>
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;" data-i18n="setting_unit">Đơn vị nhiệt độ (°C / °F)</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);" data-i18n="setting_unit_sub">Hỗ trợ chuyển đổi nhanh</div>
+          </div>
+          <span style="font-weight: 700; color: #38bdf8;">°C / °F</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;" data-i18n="setting_theme">Chế độ giao diện</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);" data-i18n="setting_theme_sub">Apple Dynamic / Dark / Light</div>
+          </div>
+          <span style="font-weight: 700; color: #facc15;">Apple Dynamic</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;" data-i18n="setting_gps">Quyền riêng tư vị trí GPS</div>
+            <div style="font-size: 0.82rem; color: var(--text-sub);" data-i18n="setting_gps_sub">Luôn hỏi trước khi truy cập</div>
+          </div>
+          <span style="font-weight: 700; color: #4ade80;">Bảo mật cao</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-language & Anti-Tampering Shield -->
+  <script src="../js/i18n.js"></script>
+  <script src="../js/security.js"></script>
+</body>
+</html>

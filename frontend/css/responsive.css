@@ -1,0 +1,81 @@
+/* ========================================================
+   MODULE: responsive.css - Tối Ưu Hiển Thị Cho Mọi Thiết Bị
+   ======================================================== */
+
+/* Tablet (Max 1024px) */
+@media (max-width: 1024px) {
+  .app-container {
+    padding: 20px 16px 40px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .current-card {
+    padding: 24px;
+  }
+
+  .radar-map {
+    height: 340px;
+  }
+}
+
+/* Mobile (Max 640px) */
+@media (max-width: 640px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .header-actions {
+    justify-content: space-between;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+  }
+
+  .weather-main-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .temp-huge {
+    font-size: 3.8rem;
+  }
+
+  .weather-icon-large {
+    font-size: 3.8rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .daily-day {
+    width: 100px;
+    font-size: 0.88rem;
+  }
+
+  .daily-desc {
+    display: none; /* Rút gọn trên màn hình nhỏ */
+  }
+
+  .radar-legend {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .radar-map {
+    height: 300px;
+  }
+
+  .chart-wrapper {
+    height: 200px;
+  }
+}

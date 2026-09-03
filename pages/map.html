@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bản Đồ Thời Tiết Vệ Tinh - MeteoLive</title>
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      height: 100%;
+      width: 100%;
+      font-family: 'Google Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
+      overflow: hidden;
+      background: #000000;
+      color: #ffffff;
+      user-select: none;
+    }
+
+    #googleEarthMap {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Floating Google Weather Top Header */
+    .google-top-bar {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .glass-pill-container {
+      pointer-events: auto;
+      background: rgba(32, 33, 36, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(20px);
+      border-radius: 999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #ffffff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none !important;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .google-brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 6px;
+    }
+
+    .google-colors-icon {
+      font-size: 1.2rem;
+      color: #4285f4;
+    }
+
+    /* Map Layer Mode Switcher */
+    .layer-mode-group {
+      pointer-events: auto;
+      display: flex;
+      background: rgba(32, 33, 36, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(20px);
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: #bdc1c6;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #4285f4;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(66, 133, 244, 0.4);
+    }
+
+    /* Google Weather Bottom Control Deck */
+    .google-bottom-deck {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 800px;
+      z-index: 1000;
+      background: rgba(32, 33, 36, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(24px);
+      border-radius: 20px;
+      padding: 14px 20px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .timeline-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .play-radar-btn {
+      background: #4285f4;
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .play-radar-btn:hover {
+      background: #3367d6;
+    }
+
+    .radar-time-badge {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #e8eaed;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+
+    .radar-intensity-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .intensity-label {
+      font-size: 0.75rem;
+      color: #9aa0a6;
+      font-weight: 500;
+    }
+
+    .google-radar-bar {
+      flex: 1;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, 
+        rgba(100, 221, 23, 0.85) 0%, 
+        rgba(255, 235, 59, 0.9) 30%, 
+        rgba(255, 152, 0, 0.95) 60%, 
+        rgba(244, 67, 54, 1) 85%, 
+        rgba(156, 39, 176, 1) 100%
+      );
+    }
+
+    /* Google Weather Temperature City Badges on Map */
+    .city-temp-badge {
+      background: rgba(32, 33, 36, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .city-temp-badge:hover {
+      background: #4285f4;
+      transform: scale(1.08);
+    }
+
+    .city-temp-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34a853;
+    }
+
+    @media (max-width: 640px) {
+      .google-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .google-bottom-deck {
+        width: 95%;
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Full Screen Map Container -->
+  <div id="googleEarthMap"></div>
+
+  <!-- Top Weather Bar -->
+  <div class="google-top-bar">
+    <div class="glass-pill-container">
+      <a href="../index.html" class="back-btn" title="Quay lại"><i class="fa-solid fa-arrow-left"></i></a>
+      <div class="google-brand-title">
+        <i class="fa-solid fa-earth-americas google-colors-icon"></i>
+        <span>Bản Đồ Thời Tiết Vệ Tinh</span>
+      </div>
+    </div>
+
+    <!-- Mode Selectors -->
+    <div style="display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap;">
+      <!-- Base Map Switcher -->
+      <div class="layer-mode-group">
+        <button class="mode-btn active" id="btnGoogleEarth"><i class="fa-solid fa-satellite"></i> Vệ Tinh</button>
+        <button class="mode-btn" id="btnGoogleTerrain"><i class="fa-solid fa-mountain"></i> Địa hình</button>
+        <button class="mode-btn" id="btnGoogleMaps"><i class="fa-solid fa-map"></i> Bản đồ</button>
+      </div>
+
+      <!-- Weather Overlays -->
+      <div class="layer-mode-group">
+        <button class="mode-btn active" id="toggleRadarLayer"><i class="fa-solid fa-cloud-showers-heavy"></i> Radar Mưa</button>
+        <button class="mode-btn active" id="toggleTempMarkers"><i class="fa-solid fa-temperature-three-quarters"></i> Nhiệt độ</button>
+      </div>
+
+      <!-- Language Switcher -->
+      <div class="layer-mode-group">
+        <button class="mode-btn active" id="langVi">VI</button>
+        <button class="mode-btn" id="langEn">EN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Timeline & Intensity Deck -->
+  <div class="google-bottom-deck">
+    <div class="timeline-top-row">
+      <button class="play-radar-btn" id="playRadarBtn"><i class="fa-solid fa-play"></i> Quét vệt mưa</button>
+      <div class="radar-time-badge" id="radarTimeDisplay">Đang tải dữ liệu mây mưa vệ tinh...</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="back-btn" id="zoomInBtn" title="Phóng to"><i class="fa-solid fa-plus"></i></button>
+        <button class="back-btn" id="zoomOutBtn" title="Thu nhỏ"><i class="fa-solid fa-minus"></i></button>
+        <button class="back-btn" id="resetCenterBtn" title="Về Việt Nam"><i class="fa-solid fa-location-crosshairs"></i></button>
+      </div>
+    </div>
+
+    <div class="radar-intensity-row">
+      <span class="intensity-label">Mưa phùn</span>
+      <div class="google-radar-bar"></div>
+      <span class="intensity-label" style="color: #ea4335;">Mưa rào to / Dông bão</span>
+    </div>
+  </div>
+
+  <!-- Leaflet & Modules -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="../js/weather.js"></script>
+
+  <script>
+    // 1. Google Earth Tile Layers
+    // - lyrs=y: Google Earth Satellite Hybrid (Ảnh vệ tinh không gian siêu nét + đường xá & tên tiếng Việt)
+    // 1. Google Earth Tile Layers (Cấu hình maxNativeZoom để không bao giờ bị lỗi Zoom Level Not Supported)
+    const layerGoogleEarth = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxNativeZoom: 15,
+      maxZoom: 17,
+      subdomains: ['0', '1', '2', '3'],
+      attribution: 'Ảnh vệ tinh không gian'
+    });
+
+    const layerGoogleTerrain = L.tileLayer('https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      maxNativeZoom: 15,
+      maxZoom: 17,
+      subdomains: ['0', '1', '2', '3'],
+      attribution: 'Bản đồ địa hình'
+    });
+
+    const layerGoogleMaps = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxNativeZoom: 18,
+      maxZoom: 18,
+      subdomains: ['0', '1', '2', '3'],
+      attribution: 'Bản đồ giao thông'
+    });
+
+    // Khởi tạo bản đồ trung tâm Việt Nam với giới hạn zoom an toàn
+    const map = L.map('googleEarthMap', {
+      center: [16.0544, 108.2022],
+      zoom: 6,
+      minZoom: 4,
+      maxZoom: 16,
+      zoomControl: false,
+      attributionControl: false,
+      layers: [layerGoogleEarth]
+    });
+
+    // Nhóm lớp Radar mây mưa & Nhãn nhiệt độ
+    const radarLayerGroup = L.layerGroup().addTo(map);
+    const tempMarkersGroup = L.layerGroup().addTo(map);
+
+    let currentBaseLayer = layerGoogleEarth;
+    let radarFrames = [];
+    let curFrameIdx = 0;
+    let playTimer = null;
+    let isPlaying = false;
+    let hostRainViewer = 'https://tilecache.rainviewer.com';
+
+    // 2. Danh sách các tỉnh thành hiển thị nhãn nhiệt độ chuẩn phong cách Google Weather
+    const PROVINCE_MARKERS = [
+      { name: 'Hà Nội', lat: 21.0285, lon: 105.8542, temp: 29 },
+      { name: 'Hải Phòng', lat: 20.8449, lon: 106.6881, temp: 29 },
+      { name: 'Nghệ An', lat: 18.6734, lon: 105.6813, temp: 30 },
+      { name: 'Thanh Hóa', lat: 19.8067, lon: 105.7852, temp: 30 },
+      { name: 'Huế', lat: 16.4637, lon: 107.5909, temp: 30 },
+      { name: 'Đà Nẵng', lat: 16.0544, lon: 108.2022, temp: 31 },
+      { name: 'Quy Nhơn', lat: 13.7820, lon: 109.2197, temp: 31 },
+      { name: 'Nha Trang', lat: 12.2388, lon: 109.1967, temp: 30 },
+      { name: 'Đà Lạt', lat: 11.9404, lon: 108.4583, temp: 20 },
+      { name: 'Pleiku', lat: 13.9833, lon: 108.0000, temp: 26 },
+      { name: 'Buôn Ma Thuột', lat: 12.6675, lon: 108.0383, temp: 28 },
+      { name: 'TP. Hồ Chí Minh', lat: 10.8231, lon: 106.6297, temp: 32 },
+      { name: 'Vũng Tàu', lat: 10.3460, lon: 107.0843, temp: 31 },
+      { name: 'Cần Thơ', lat: 10.0452, lon: 105.7469, temp: 31 },
+      { name: 'Phú Quốc', lat: 10.2289, lon: 103.9572, temp: 30 },
+      { name: 'Cà Mau', lat: 9.1769, lon: 105.1524, temp: 31 },
+      { name: 'Lào Cai (Sa Pa)', lat: 22.3364, lon: 103.8438, temp: 21 },
+      { name: 'Hạ Long', lat: 20.9505, lon: 107.0734, temp: 29 },
+    ];
+
+    function renderTempMarkers() {
+      tempMarkersGroup.clearLayers();
+      PROVINCE_MARKERS.forEach(item => {
+        const iconHtml = `<div class="city-temp-badge"><div class="city-temp-dot"></div><span>${item.temp}° ${item.name}</span></div>`;
+        const markerIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-temp-icon',
+          iconSize: [120, 26],
+          iconAnchor: [60, 13]
+        });
+
+        const marker = L.marker([item.lat, item.lon], { icon: markerIcon });
+        marker.on('click', () => {
+          map.setView([item.lat, item.lon], 9);
+        });
+        marker.addTo(tempMarkersGroup);
+      });
+    }
+
+    renderTempMarkers();
+
+    // 3. Tải dữ liệu Radar mây mưa từ RainViewer
+    async function loadRadarFrames() {
+      try {
+        const res = await safeFetch('https://api.rainviewer.com/public/weather-maps.json', 6000);
+        if (res && res.radar && res.radar.past && res.radar.past.length > 0) {
+          hostRainViewer = res.host || 'https://tilecache.rainviewer.com';
+          radarFrames = res.radar.past;
+          showRadarFrame(radarFrames.length - 1);
+        }
+      } catch (err) {
+        console.warn('Lỗi tải radar:', err);
+      }
+    }
+
+    function showRadarFrame(idx) {
+      if (!radarFrames[idx]) return;
+      curFrameIdx = idx;
+      radarLayerGroup.clearLayers();
+      const frame = radarFrames[idx];
+
+      // Overlay mây mưa phong cách khí tượng đặt trên nền vệ tinh Google Earth
+      const tileUrl = `${hostRainViewer}${frame.path}/256/{z}/{x}/{y}/1/1_1.png`;
+      L.tileLayer(tileUrl, {
+        opacity: 0.82,
+        zIndex: 150,
+        tileSize: 256
+      }).addTo(radarLayerGroup);
+
+      const d = new Date(frame.time * 1000);
+      const isLatest = idx === radarFrames.length - 1;
+      document.getElementById('radarTimeDisplay').textContent = isLatest 
+        ? `Radar vệ tinh lúc: ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} (Mới nhất)`
+        : `Lịch sử quét: ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    // Nút phát hoạt ảnh chuyển động radar
+    document.getElementById('playRadarBtn').addEventListener('click', () => {
+      const btn = document.getElementById('playRadarBtn');
+      if (isPlaying) {
+        clearInterval(playTimer);
+        isPlaying = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Quét vệt mưa';
+      } else {
+        if (!radarFrames || radarFrames.length === 0) return;
+        isPlaying = true;
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i> Tạm dừng';
+        let i = 0;
+        playTimer = setInterval(() => {
+          showRadarFrame(i);
+          i = (i + 1) % radarFrames.length;
+        }, 550);
+      }
+    });
+
+    // 4. Các nút chuyển đổi lớp bản đồ Google
+    function setBaseLayer(newLayer, activeBtn) {
+      map.removeLayer(currentBaseLayer);
+      map.addLayer(newLayer);
+      currentBaseLayer = newLayer;
+
+      document.querySelectorAll('#btnGoogleEarth, #btnGoogleTerrain, #btnGoogleMaps').forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+    }
+
+    document.getElementById('btnGoogleEarth').addEventListener('click', function() {
+      setBaseLayer(layerGoogleEarth, this);
+    });
+
+    document.getElementById('btnGoogleTerrain').addEventListener('click', function() {
+      setBaseLayer(layerGoogleTerrain, this);
+    });
+
+    document.getElementById('btnGoogleMaps').addEventListener('click', function() {
+      setBaseLayer(layerGoogleMaps, this);
+    });
+
+    // Bật / tắt lớp Radar và Nhiệt độ
+    const btnToggleRadar = document.getElementById('toggleRadarLayer');
+    btnToggleRadar.addEventListener('click', () => {
+      if (map.hasLayer(radarLayerGroup)) {
+        map.removeLayer(radarLayerGroup);
+        btnToggleRadar.classList.remove('active');
+      } else {
+        map.addLayer(radarLayerGroup);
+        btnToggleRadar.classList.add('active');
+      }
+    });
+
+    const btnToggleTemp = document.getElementById('toggleTempMarkers');
+    btnToggleTemp.addEventListener('click', () => {
+      if (map.hasLayer(tempMarkersGroup)) {
+        map.removeLayer(tempMarkersGroup);
+        btnToggleTemp.classList.remove('active');
+      } else {
+        map.addLayer(tempMarkersGroup);
+        btnToggleTemp.classList.add('active');
+      }
+    });
+
+    // Zoom & Reset
+    document.getElementById('zoomInBtn').addEventListener('click', () => map.zoomIn());
+    document.getElementById('zoomOutBtn').addEventListener('click', () => map.zoomOut());
+    document.getElementById('resetCenterBtn').addEventListener('click', () => map.setView([16.0544, 108.2022], 6));
+
+    loadRadarFrames();
+  </script>
+
+  <!-- Đa ngôn ngữ & Khóa sửa code DevTools -->
+  <script src="../js/i18n.js"></script>
+  <script src="../js/security.js"></script>
+</body>
+</html>

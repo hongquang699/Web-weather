@@ -29,10 +29,11 @@ echo [2/3] Dang mo website tren trinh duyet...
 timeout /t 2 /nobreak >nul
 start "" "http://127.0.0.1:8000/"
 
-echo [3/3] Dang khoi dong may chu Django tai http://127.0.0.1:8000/
+echo [3/3] Dang khoi dong may chu Django tai 0.0.0.0:8000 (mo cho moi may trong mang LAN)
+echo Truy cap tren may nay: http://localhost:8000/ hoac http://127.0.0.1:8000/
 echo (Nhan Ctrl+C de dung may chu bat cu luc nao)
 echo.
 cd backend
-"%~dp0%PYTHON_EXE%" manage.py runserver 127.0.0.1:8000
+"%~dp0%PYTHON_EXE%" manage.py runserver 0.0.0.0:8000
 
 pause

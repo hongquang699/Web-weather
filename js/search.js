@@ -67,7 +67,8 @@ async function fetchAndRenderSuggestions(query, container, onSelectPlace) {
 
     // 2. Thử gọi thêm Django Search API hoặc Open-Meteo cho địa danh quốc tế
     try {
-      const apiRes = await safeFetch(`http://127.0.0.1:8000/api/weather/search/?q=${encodeURIComponent(cleanQuery)}`, 1800);
+      const searchEndpoint = `${window.location.origin}/api/weather/search/?q=${encodeURIComponent(cleanQuery)}`;
+      const apiRes = await safeFetch(searchEndpoint, 1800);
       if (Array.isArray(apiRes) && apiRes.length > 0) {
         apiRes.forEach(extPlace => {
           // Tránh trùng lặp với tỉnh thành đã có

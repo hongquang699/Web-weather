@@ -76,9 +76,10 @@ async function fetchWeatherData(lat, lon, placeName) {
   const safeLon = encodeURIComponent(lon);
   let data = null;
 
-  // 1. Thử kết nối Django Backend REST API
+  // 1. Thử kết nối Django Backend REST API (thích ứng tự động với 0.0.0.0, localhost, hoặc LAN IP)
   try {
-    const backendRes = await safeFetch(`http://127.0.0.1:8000/api/weather/forecast/?lat=${safeLat}&lon=${safeLon}&place=${encodeURIComponent(placeName || '')}`, 2000);
+    const apiEndpoint = `${window.location.origin}/api/weather/forecast/?lat=${safeLat}&lon=${safeLon}&place=${encodeURIComponent(placeName || '')}`;
+    const backendRes = await safeFetch(apiEndpoint, 2000);
     if (backendRes && backendRes.status === 'success' && backendRes.data) {
       data = backendRes.data;
     }

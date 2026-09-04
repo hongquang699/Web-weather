@@ -70,26 +70,46 @@ async function safeFetch(url, timeoutMs = 8000) {
   }
 }
 
+// Bộ nhớ đệm Client-Side RAM Cache (phản hồi 0ms khi chuyển đổi lại địa điểm)
+const CLIENT_WEATHER_CACHE = new Map();
+const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 phút
+
 async function fetchWeatherData(lat, lon, placeName) {
   if (!isValidCoordinate(lat, lon)) throw new Error('Tọa độ không hợp lệ.');
-  const safeLat = encodeURIComponent(lat);
-  const safeLon = encodeURIComponent(lon);
+  const numLat = parseFloat(lat);
+  const numLon = parseFloat(lon);
+  const cacheKey = `${numLat.toFixed(3)}_${numLon.toFixed(3)}`;
+
+  // 1. SIÊU TỐC: Kiểm tra Client RAM Cache ngay trên trình duyệt (0ms)
+  const cached = CLIENT_WEATHER_CACHE.get(cacheKey);
+  if (cached && (Date.now() - cached.time < CLIENT_CACHE_TTL_MS)) {
+    return cached.data;
+  }
+
+  const safeLat = encodeURIComponent(numLat);
+  const safeLon = encodeURIComponent(numLon);
   let data = null;
 
-  // 1. Thử kết nối Django Backend REST API (thích ứng tự động với 0.0.0.0, localhost, hoặc LAN IP)
+  // 2. Thử kết nối Django Backend REST API (thích ứng tự động 0.0.0.0, localhost, LAN IP)
   try {
     const apiEndpoint = `${window.location.origin}/api/weather/forecast/?lat=${safeLat}&lon=${safeLon}&place=${encodeURIComponent(placeName || '')}`;
-    const backendRes = await safeFetch(apiEndpoint, 2000);
+    const backendRes = await safeFetch(apiEndpoint, 4500);
     if (backendRes && backendRes.status === 'success' && backendRes.data) {
       data = backendRes.data;
     }
   } catch (e) {}
 
-  // 2. Fallback trực tiếp Open-Meteo
+  // 3. Fallback trực tiếp Open-Meteo nếu mạng nội bộ hoặc backend chưa sẵn sàng
   if (!data) {
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${safeLat}&longitude=${safeLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,visibility,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&forecast_days=14&timezone=auto`;
     data = await safeFetch(weatherUrl, 8000);
   }
+
+  // Lưu ngay vào Client RAM Cache để các lần chuyển đổi sau hiển thị ngay trong 0ms
+  if (data) {
+    CLIENT_WEATHER_CACHE.set(cacheKey, { data, time: Date.now() });
+  }
+
   return data;
 }
 

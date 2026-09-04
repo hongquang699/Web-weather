@@ -49,6 +49,47 @@ function initSearchModule(onSelectPlace) {
   });
 }
 
+function renderSuggestionList(places, cleanQuery, container, onSelectPlace) {
+  if (!container) return;
+  container.innerHTML = '';
+  if (places.length > 0) {
+    places.forEach(place => {
+      if (!place || !isValidCoordinate(place.latitude, place.longitude)) return;
+      const item = document.createElement('div');
+      item.className = 'suggestion-item';
+
+      const safeName = escapeHTML(place.name || '');
+      const stateCountry = [place.admin1, place.country].filter(Boolean).map(escapeHTML).join(', ');
+      const fullDisplayName = `${place.name || ''}${stateCountry ? `, ${stateCountry}` : ''}`;
+      const countryCode = place.country_code ? escapeHTML(place.country_code.toUpperCase()) : '';
+
+      item.innerHTML = `
+        <div class="suggestion-item-left">
+          <i class="fa-solid fa-location-dot"></i>
+          <div class="suggestion-info">
+            <span class="suggestion-main">${safeName}</span>
+            <span class="suggestion-sub">${stateCountry} &bull; (${place.latitude.toFixed(2)}°, ${place.longitude.toFixed(2)}°)</span>
+          </div>
+        </div>
+        ${countryCode ? `<span class="country-flag-badge">${countryCode}</span>` : ''}
+      `;
+
+      item.addEventListener('click', () => {
+        const input = document.getElementById('cityInput');
+        if (input) input.value = fullDisplayName;
+        container.classList.remove('show');
+        if (onSelectPlace) onSelectPlace(place.latitude, place.longitude, fullDisplayName);
+      });
+
+      container.appendChild(item);
+    });
+    container.classList.add('show');
+  } else {
+    container.innerHTML = `<div class="suggestion-item"><span class="suggestion-sub">Không tìm thấy địa điểm khớp với "${escapeHTML(cleanQuery)}"</span></div>`;
+    container.classList.add('show');
+  }
+}
+
 async function fetchAndRenderSuggestions(query, container, onSelectPlace) {
   if (!container) return;
   try {
@@ -57,77 +98,49 @@ async function fetchAndRenderSuggestions(query, container, onSelectPlace) {
 
     let places = [];
 
-    // 1. ƯU TIÊN HÀNG ĐẦU: Tìm kiếm ngay trong danh bạ 63 Tỉnh Thành Việt Nam
+    // 1. SIÊU TỐC: Hiển thị NGAY LẬP TỨC 63 tỉnh thành Việt Nam (0ms không cần chờ mạng)
     if (typeof searchLocalLocations === 'function') {
       const localMatches = searchLocalLocations(cleanQuery);
       if (localMatches.length > 0) {
         places.push(...localMatches);
+        renderSuggestionList(places, cleanQuery, container, onSelectPlace);
       }
     }
 
-    // 2. Thử gọi thêm Django Search API hoặc Open-Meteo cho địa danh quốc tế
+    // 2. Chạy ngầm gọi thêm API quốc tế (nếu cần mở rộng kết quả)
     try {
       const searchEndpoint = `${window.location.origin}/api/weather/search/?q=${encodeURIComponent(cleanQuery)}`;
-      const apiRes = await safeFetch(searchEndpoint, 1800);
+      const apiRes = await safeFetch(searchEndpoint, 1500);
       if (Array.isArray(apiRes) && apiRes.length > 0) {
+        let added = false;
         apiRes.forEach(extPlace => {
-          // Tránh trùng lặp với tỉnh thành đã có
           const exists = places.some(p => Math.abs(p.latitude - extPlace.latitude) < 0.1 && Math.abs(p.longitude - extPlace.longitude) < 0.1);
-          if (!exists) places.push(extPlace);
+          if (!exists) {
+            places.push(extPlace);
+            added = true;
+          }
         });
+        if (added) renderSuggestionList(places, cleanQuery, container, onSelectPlace);
       }
     } catch (e) {}
 
-    // 3. Fallback sang Open-Meteo Geocoding nếu chưa có nhiều kết quả
-    if (places.length < 3) {
+    // 3. Fallback Open-Meteo nếu chưa có kết quả nào
+    if (places.length === 0) {
       try {
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=10&language=vi&format=json`;
-        const data = await safeFetch(geoUrl, 3000);
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=6&language=vi&format=json`;
+        const data = await safeFetch(geoUrl, 2500);
         if (data && data.results) {
           data.results.forEach(extPlace => {
             const exists = places.some(p => Math.abs(p.latitude - extPlace.latitude) < 0.1 && Math.abs(p.longitude - extPlace.longitude) < 0.1);
             if (!exists) places.push(extPlace);
           });
+          renderSuggestionList(places, cleanQuery, container, onSelectPlace);
         }
       } catch (e) {}
     }
 
-    container.innerHTML = '';
-    if (places.length > 0) {
-      places.forEach(place => {
-        if (!place || !isValidCoordinate(place.latitude, place.longitude)) return;
-        const item = document.createElement('div');
-        item.className = 'suggestion-item';
-
-        const safeName = escapeHTML(place.name || '');
-        const stateCountry = [place.admin1, place.country].filter(Boolean).map(escapeHTML).join(', ');
-        const fullDisplayName = `${place.name || ''}${stateCountry ? `, ${stateCountry}` : ''}`;
-        const countryCode = place.country_code ? escapeHTML(place.country_code.toUpperCase()) : '';
-
-        item.innerHTML = `
-          <div class="suggestion-item-left">
-            <i class="fa-solid fa-location-dot"></i>
-            <div class="suggestion-info">
-              <span class="suggestion-main">${safeName}</span>
-              <span class="suggestion-sub">${stateCountry} &bull; (${place.latitude.toFixed(2)}°, ${place.longitude.toFixed(2)}°)</span>
-            </div>
-          </div>
-          ${countryCode ? `<span class="country-flag-badge">${countryCode}</span>` : ''}
-        `;
-
-        item.addEventListener('click', () => {
-          const input = document.getElementById('cityInput');
-          if (input) input.value = fullDisplayName;
-          container.classList.remove('show');
-          if (onSelectPlace) onSelectPlace(place.latitude, place.longitude, fullDisplayName);
-        });
-
-        container.appendChild(item);
-      });
-      container.classList.add('show');
-    } else {
-      container.innerHTML = `<div class="suggestion-item"><span class="suggestion-sub">Không tìm thấy địa điểm khớp với "${escapeHTML(cleanQuery)}"</span></div>`;
-      container.classList.add('show');
+    if (places.length === 0) {
+      renderSuggestionList([], cleanQuery, container, onSelectPlace);
     }
   } catch (err) {
     console.error('Lỗi gợi ý tìm kiếm:', err);

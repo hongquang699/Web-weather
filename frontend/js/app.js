@@ -458,7 +458,7 @@ function renderMainWeatherView() {
   const shortName = appState.currentPlaceName.split(',')[0];
   const cityEl = document.getElementById('cityName');
   if (cityEl) cityEl.textContent = appState.currentPlaceName;
-  document.title = `${formatTemp(current.temperature_2m, appState.currentUnit)}°${appState.currentUnit} - ${shortName} | MeteoLive`;
+  document.title = `${formatTemp(current.temperature_2m, appState.currentUnit)}°${appState.currentUnit} - ${shortName} | VietWeather`;
 
   const mapLinkEl = document.getElementById('openMapLink');
   if (mapLinkEl) {

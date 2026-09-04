@@ -54,7 +54,7 @@ def api_root(request):
     """Trang điều hướng API khi truy cập http://127.0.0.1:8000/api/weather/"""
     base_url = request.build_absolute_uri('/')[:-1]
     return JsonResponse({
-        "name": "MeteoLive Django REST API",
+        "name": "VietWeather Django REST API",
         "description": "Backend API quản lý, chuẩn hóa và cache dữ liệu thời tiết",
         "version": "1.0.0",
         "frontend_website": f"{base_url}/",

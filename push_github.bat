@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title MeteoLive - Dong Bo Ma Nguon Len GitHub
+title VietWeather - Dong Bo Ma Nguon Len GitHub
 color 0a
 
 echo ========================================================

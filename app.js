@@ -735,7 +735,7 @@ function renderWeatherData() {
   // Current Weather Card
   const shortName = state.currentPlaceName.split(',')[0];
   document.getElementById('cityName').textContent = state.currentPlaceName;
-  document.title = `${formatTemp(current.temperature_2m)}°${state.currentUnit} - ${shortName} | MeteoLive`;
+  document.title = `${formatTemp(current.temperature_2m)}°${state.currentUnit} - ${shortName} | VietWeather`;
 
   const mapLinkEl = document.getElementById('openMapLink');
   if (mapLinkEl) {

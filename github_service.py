@@ -84,7 +84,7 @@ def git_push(commit_message: str = None) -> dict:
     Returns dict: { success: bool, message: str, output: str }
     """
     if not commit_message:
-        commit_message = f"Update MeteoLive Weather Platform - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        commit_message = f"Update VietWeather Platform - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
     cfg = _load_config()
     repo_url_base = cfg.get("github_repo_url", DEFAULT_REPO_URL)

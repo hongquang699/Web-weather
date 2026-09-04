@@ -1,4 +1,4 @@
-# 🌦️ MeteoLive — Real-Time Weather Platform in Apple Weather Style
+# 🌦️ VietWeather — Real-Time Weather Platform in Apple Weather Style
 
 [![Django](https://img.shields.io/badge/Django-5.0+-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Django REST Framework](https://img.shields.io/badge/DRF-3.14+-red?style=for-the-badge)](https://www.django-rest-framework.org/)
@@ -7,7 +7,7 @@
 [![Chart.js](https://img.shields.io/badge/Chart.js-4.4.1-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-**MeteoLive** is a modern, high-performance, real-time weather web application designed with the aesthetic excellence of the **Apple Weather app (iOS 17/18)**. It combines **High-Definition Satellite Imagery**, **Live Meteorological Rain Radar**, and a **Django REST API Backend** equipped with multi-tiered caching and anti-tampering security.
+**VietWeather** is a modern, high-performance, real-time weather web application designed with the aesthetic excellence of the **Apple Weather app (iOS 17/18)**. It combines **High-Definition Satellite Imagery**, **Live Meteorological Rain Radar**, and a **Django REST API Backend** equipped with multi-tiered caching and anti-tampering security.
 
 ---
 
@@ -170,6 +170,6 @@ The application will automatically be available at `http://localhost/` or `http:
 
 ## ⚖️ 5. License & Credits
 
-- Developed by **MeteoLive Team**.
+- Developed by **VietWeather Team**.
 - Built with high-fidelity inspiration from Apple Weather and modern meteorological mapping standards.
 - All rights reserved. Code protected against unauthorized inspection and tampering.

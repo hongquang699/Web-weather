@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title MeteoLive - Khoi Dong May Chu Thoi Tiet
+title VietWeather - Khoi Dong May Chu Thoi Tiet
 color 0b
 
 echo ========================================================
-echo        🌦️ DỰ ÁN THỜI TIẾT THỜI GIAN THỰC METEOLIVE
+echo        🌦️ DỰ ÁN THỜI TIẾT THỜI GIAN THỰC VIETWEATHER
 echo ========================================================
 echo.
 

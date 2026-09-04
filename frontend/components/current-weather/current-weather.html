@@ -1,0 +1,97 @@
+<!-- Component: current-weather.html -->
+<div class="current-card">
+  <div class="card-top">
+    <div class="location-info">
+      <h2 id="cityName">--</h2>
+      <div class="local-time" id="localTime">Đang cập nhật...</div>
+      <a href="#" target="_blank" rel="noopener noreferrer" class="map-badge" id="openMapLink">
+        <i class="fa-solid fa-map-location-dot"></i> Xem trên Google Maps
+      </a>
+    </div>
+    <button class="icon-btn" id="cardFavBtn" title="Đánh dấu yêu thích">
+      <i class="fa-regular fa-bookmark" id="cardFavIcon"></i>
+    </button>
+  </div>
+
+  <div class="weather-main-row">
+    <div class="weather-icon-large" id="mainWeatherIcon">
+      <i class="fa-solid fa-cloud-sun" style="color: #facc15"></i>
+    </div>
+    <div>
+      <div class="temp-huge"><span id="currentTemp">--</span><span class="temp-unit">°</span></div>
+      <div class="weather-state-desc" id="weatherDescription">--</div>
+      <div class="feels-like-text">Cảm giác thực tế như <span id="feelsLikeTemp">--</span>°</div>
+      <div class="temp-range-pills">
+        <span class="range-pill"><i class="fa-solid fa-arrow-up" style="color: #f87171;"></i> Cao: <span id="maxTemp">--</span>°</span>
+        <span class="range-pill"><i class="fa-solid fa-arrow-down" style="color: #60a5fa;"></i> Thấp: <span id="minTemp">--</span>°</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <i class="fa-solid fa-droplet" style="color: #38bdf8;"></i>
+      <div>
+        <div class="metric-title">Độ ẩm</div>
+        <div class="metric-value"><span id="humidityVal">--</span>%</div>
+        <div class="metric-sub">Không khí</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-wind" style="color: #a78bfa;"></i>
+      <div>
+        <div class="metric-title">Tốc độ gió</div>
+        <div class="metric-value"><span id="windSpeedVal">--</span> km/h</div>
+        <div class="metric-sub" id="windDirVal">Hướng gió</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-sun" style="color: #facc15;"></i>
+      <div>
+        <div class="metric-title">Chỉ số UV</div>
+        <div class="metric-value" id="uvVal">--</div>
+        <div class="metric-sub" id="uvDesc">Tia cực tím</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-gauge-high" style="color: #34d399;"></i>
+      <div>
+        <div class="metric-title">Áp suất</div>
+        <div class="metric-value"><span id="pressureVal">--</span> hPa</div>
+        <div class="metric-sub">Khí quyển</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-cloud-rain" style="color: #60a5fa;"></i>
+      <div>
+        <div class="metric-title">Lượng mưa</div>
+        <div class="metric-value"><span id="rainVal">--</span> mm</div>
+        <div class="metric-sub">24 giờ qua</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-eye" style="color: #2dd4bf;"></i>
+      <div>
+        <div class="metric-title">Tầm nhìn</div>
+        <div class="metric-value"><span id="visibilityVal">--</span> km</div>
+        <div class="metric-sub" id="visibilityDesc">Quang đãng</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-moon" style="color: #fef08a;"></i>
+      <div>
+        <div class="metric-title">Pha Mặt Trăng</div>
+        <div class="metric-value" id="moonPhaseName" style="font-size: 1.05rem;">--</div>
+        <div class="metric-sub" id="moonIllumVal">Thủy triều</div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <i class="fa-solid fa-sun-plant-wilt" style="color: #fb923c;"></i>
+      <div>
+        <div class="metric-title">Mặt trời</div>
+        <div class="metric-value" style="font-size: 1rem;">🌅 <span id="sunriseVal">--</span></div>
+        <div class="metric-sub">🌇 Hoàng hôn: <span id="sunsetVal">--</span></div>
+      </div>
+    </div>
+  </div>
+</div>

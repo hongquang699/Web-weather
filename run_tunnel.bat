@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title MeteoLive - Cloudflare Public Tunnel
+title VietWeather - Cloudflare Public Tunnel
 color 0e
 
 echo ========================================================
